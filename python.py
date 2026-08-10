@@ -21,3 +21,14 @@ a = {
     }
 }
 
+b = {
+    "age": 25,
+    "settings": {
+        "theme": "light",
+        "language": "English"
+    }
+}
+
+merged = recursive_merge(a, b)
+
+print(merged)
