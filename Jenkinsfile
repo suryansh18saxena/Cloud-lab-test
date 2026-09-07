@@ -1,40 +1,23 @@
 pipeline {
     agent any
-    
+
     environment {
         CI = 'true'
-        NODE_ENV = 'test'
+        PORT = '5000'
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
                 echo '📥 Checking out repository...'
-                // If the job is configured as "Pipeline script from SCM", checkout scm is automatic.
-                // You can also explicitly checkout with credentials:
                 checkout scm
-            }
-        }
-
-        stage('Environment Info') {
-            steps {
-                echo '🔍 Inspecting Node and npm versions...'
-                sh 'node -v'
-                sh 'npm -v'
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 echo '📦 Installing project dependencies...'
-                // Use 'npm ci' if package-lock.json exists, otherwise fallback to 'npm install'
-                sh '''
-                    if [ -f package-lock.json ]; then
-                        npm ci
-                    else
-                        npm install
-                    fi
-                '''
+                sh 'npm install'
             }
         }
 
@@ -45,28 +28,33 @@ pipeline {
             }
         }
 
-        stage('Build & Lint') {
+        stage('Deploy') {
             steps {
-                echo '🔨 Running build verification...'
-                // Example: npm run build (if applicable)
-                sh 'echo "Application verified and ready for deployment."'
+                echo '🚀 Deploying Node.js application...'
+                sh '''
+                    # Restart if already running, else start fresh
+                    npx pm2 restart node-jenkins-demo 2>/dev/null || npx pm2 start src/index.js --name "node-jenkins-demo"
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                echo '🩺 Verifying deployment health...'
+                sh '''
+                    sleep 2
+                    curl -s http://localhost:5000
+                '''
             }
         }
     }
 
     post {
-        always {
-            echo '🧹 Cleaning up temporary workspace files...'
-            cleanWs(deleteDirs: true, notFailBuild: true)
-        }
         success {
-            echo '✅ Pipeline Succeeded: All tests passed and build is healthy!'
-        }
-        unstable {
-            echo '⚠️ Pipeline Unstable: Build succeeded with warnings/unstable tests.'
+            echo '✅ Pipeline Succeeded: Node.js app is live and healthy on http://localhost:5000'
         }
         failure {
-            echo '❌ Pipeline Failed: Test or build step threw an error.'
+            echo '❌ Pipeline Failed: Check logs for details.'
         }
     }
 }
