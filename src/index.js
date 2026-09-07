@@ -7,7 +7,7 @@ function createServer() {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
             status: 'success', 
-            message: 'Hello from Node.js CI/CD Pipeline!',
+            message: 'Hello from Node.js CI/CD Pipeline! This is a simple Node.js application running in a CI/CD pipeline.',
             timestamp: new Date().toISOString()
         }));
     });
